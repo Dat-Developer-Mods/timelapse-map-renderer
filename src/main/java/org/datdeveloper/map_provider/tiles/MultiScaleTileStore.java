@@ -1,4 +1,4 @@
-package org.datdeveloper.map_source.tiles;
+package org.datdeveloper.map_provider.tiles;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,12 +1,12 @@
 package org.datdeveloper.camera;
 
-import org.datdeveloper.util.FPos;
+import org.datdeveloper.util.FVec2;
 
 /**
  * A camera implementation that remains static throughout the runtime of the timelapse
  */
 public class SimpleCamera implements ICamera {
-    private FPos cameraPosition;
+    private FVec2 cameraPosition;
     private float cameraZoom;
     private String cameraDimension;
 
@@ -15,7 +15,7 @@ public class SimpleCamera implements ICamera {
      * @param cameraZoom The zoom of the camera
      * @param cameraDimension The dimension the camera is in
      */
-    public SimpleCamera(final FPos cameraPosition, final float cameraZoom, final String cameraDimension) {
+    public SimpleCamera(final FVec2 cameraPosition, final float cameraZoom, final String cameraDimension) {
         this.cameraPosition = cameraPosition;
         this.cameraZoom = cameraZoom;
         this.cameraDimension = cameraDimension;
@@ -23,7 +23,7 @@ public class SimpleCamera implements ICamera {
 
     /** {@inheritDoc} */
     @Override
-    public FPos getCameraPosition(final int frame) {
+    public FVec2 getCameraPosition(final int frame) {
         return cameraPosition;
     }
 
@@ -43,7 +43,7 @@ public class SimpleCamera implements ICamera {
      * Set a new position for the camera
      * @param cameraPosition The new position of the camera
      */
-    public void setCameraPosition(final FPos cameraPosition) {
+    public void setCameraPosition(final FVec2 cameraPosition) {
         this.cameraPosition = cameraPosition;
     }
 

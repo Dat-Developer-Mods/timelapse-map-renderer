@@ -1,6 +1,6 @@
 package org.datdeveloper.camera;
 
-import org.datdeveloper.util.FPos;
+import org.datdeveloper.util.FVec2;
 
 /**
  * An interface representing information about the camera
@@ -11,7 +11,7 @@ public interface ICamera {
      * @param frame The current frame being rendered
      * @return The position of the camera at the given frame
      */
-    FPos getCameraPosition(int frame);
+    FVec2 getCameraPosition(int frame);
 
     /**
      * Get the zoom of the camera

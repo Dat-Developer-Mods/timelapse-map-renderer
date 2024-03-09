@@ -1,10 +1,11 @@
-package org.datdeveloper.map_source;
+package org.datdeveloper.map_provider;
 
-import org.datdeveloper.map_source.tiles.BasicTileStore;
-import org.datdeveloper.map_source.tiles.ITileStore;
-import org.datdeveloper.map_source.tiles.MultiScaleTileStore;
-import org.datdeveloper.util.FPos;
-import org.datdeveloper.util.IPos;
+import org.datdeveloper.camera.ICamera;
+import org.datdeveloper.map_provider.tiles.BasicTileStore;
+import org.datdeveloper.map_provider.tiles.ITileStore;
+import org.datdeveloper.map_provider.tiles.MultiScaleTileStore;
+import org.datdeveloper.util.FVec2;
+import org.datdeveloper.util.IVec2;
 import org.datdeveloper.util.MathUtil;
 
 import javax.imageio.ImageIO;
@@ -25,7 +26,7 @@ import java.util.stream.Stream;
 /**
  * A map source representing maps from the <a href="https://modrinth.com/plugin/squaremap">Square Map Mod</a>
  */
-public class SquareMapSource implements IMapSource {
+public class SquareMapSource implements IMapProvider {
     /**
      * A regex pattern for the tile file names
      * Group 1: The X Coord
@@ -84,7 +85,7 @@ public class SquareMapSource implements IMapSource {
     private void processScaleDir(final String dimension, final Path scaleDir) {
         final int scale = Integer.parseInt(scaleDir.getFileName().toString());
         try (final Stream<Path> tileFileStream = Files.list(scaleDir)){
-            final Map<IPos, BufferedImage> tiles = tileFileStream
+            final Map<IVec2, BufferedImage> tiles = tileFileStream
                     .collect(Collectors.toMap(tileFile -> {
                         final String filename = com.google.common.io.Files.getNameWithoutExtension(tileFile.getFileName().toString());
                         final Matcher match = TILE_COORD_PATTERN.matcher(filename);
@@ -92,7 +93,7 @@ public class SquareMapSource implements IMapSource {
                             throw new RuntimeException("Failed to parse tile name: %s".formatted(filename));
                         }
 
-                        return new IPos(Integer.parseInt(match.group(1)), Integer.parseInt(match.group(2)));
+                        return new IVec2(Integer.parseInt(match.group(1)), Integer.parseInt(match.group(2)));
                     }, tileFile -> {
                         try {
                             return ImageIO.read(tileFile.toFile());
@@ -109,16 +110,20 @@ public class SquareMapSource implements IMapSource {
 
     /** {@inheritDoc} */
     @Override
-    public void renderFrame(final Graphics2D frameImage, final int width, final int height, final String dimension, final FPos centre, final float zoom) {
+    public void render(final Graphics2D frameImage, final IVec2 frameDimensions, final int frame, final ICamera camera) {
+        final FVec2 centre = camera.getCameraPosition(frame);
+        final float zoom = camera.getCameraZoom(frame);
+        final String dimension = camera.getCameraDimension(frame);
+
         final ITileStore tiles = dimensionTiles.get(dimension).getOptimalTileScale(zoom);
 
-        final FPos offset = new FPos((float) width / 2, (float) height / 2);
+        final FVec2 offset = frameDimensions.divide(2);
 
         final float realZoom = zoom - tiles.scale;
         final double scale = Math.pow(2, realZoom);
         final float scaledResolution = (float) (TILE_RESOLUTION * scale);
 
-        final FPos scaledCentre = centre.divide((float) Math.pow(2, 3 - zoom));
+        final FVec2 scaledCentre = MathUtil.worldPosToPixelAtZoom(centre, zoom);
 
         final int minTileX = (int) MathUtil.roundAwayFromZero((centre.x() - offset.x()) / scaledResolution);
         final int minTileY = (int) MathUtil.roundAwayFromZero((centre.y() - offset.y()) / scaledResolution);
@@ -127,7 +132,7 @@ public class SquareMapSource implements IMapSource {
 
         for (int tileX = minTileX; tileX <= maxTileX; tileX++) {
             for (int tileY = maxTileY; tileY >= minTileY; tileY--) {
-                final BufferedImage tile = tiles.getTile(new IPos(tileX, tileY));
+                final BufferedImage tile = tiles.getTile(new IVec2(tileX, tileY));
                 if (tile == null) continue;
 
                 final AffineTransform transform = new AffineTransform();
